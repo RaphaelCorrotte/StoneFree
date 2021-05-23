@@ -88,7 +88,7 @@ module StoneFree
             fields << {
               :name => "• #{Utils::display(category.to_s)}",
               :value => $client.commands.filter { |cmd| cmd.category == category }.map { |cmd| cmd.name }.join(", ")
-            }
+            } unless category == "TESTS" or category == "OWNER"
           end
 
           event.channel.send_embed do |embed|

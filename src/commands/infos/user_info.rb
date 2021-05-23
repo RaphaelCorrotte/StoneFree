@@ -12,21 +12,10 @@ module StoneFree
                              :required_bot_permissions => :default,
                              :args => ["[utilisateur]"]
                            }) do |event, tools|
-        target = if tools[:args].empty?
-                    event.author
-                 else
-                   if !(event.message.mentions.empty?)
-                     event.server.users.filter { |usr| usr.id == event.message.mentions.first.id }.first
-                   elsif !(event.server.members.filter { |usr| usr.id == tools[:args][0].to_i }.empty?)
-                    event.server.members.filter { |usr| usr.id == tools[:args][0].to_i }.first
-                   elsif !(event.channel.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.empty?)
-                     event.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.first
-                   else
-                     "not_found"
-                   end
-                 end
 
-        if target == "not_found" || target == nil
+        target = Utils::get_member(message_event: event, tools: tools)
+
+        if target == "not_found" || target == nil ||!target
           event.respond "L'utilisateur n'a pas été trouvé. Veuillez réessayer."
           next
         end
@@ -52,7 +41,7 @@ module StoneFree
           Utils::add_fields(embed, [
             {
               :name => "• Identifiant",
-              :value => target.id
+              :value => target.id.to_s
             },
             {
               :name => "• Surnom",
