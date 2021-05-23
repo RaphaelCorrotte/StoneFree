@@ -65,7 +65,43 @@ module StoneFree::Utils
         .join(" ")
   end
 
+  def get_member(tools: nil, message_event: nil)
+    if tools and message_event
+      if tools[:args].empty?
+            message_event.author
+               else
+                 if !(message_event.message.mentions.empty?)
+                   message_event.server.users.filter { |usr| usr.id == message_event.message.mentions.first.id }.first
+                 elsif !(message_event.server.members.filter { |usr| usr.id == tools[:args][0].to_i }.empty?)
+                   message_event.server.members.filter { |usr| usr.id == tools[:args][0].to_i }.first
+                 elsif !(message_event.channel.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.empty?)
+                   message_event.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.first
+                 else
+                   "not_found"
+                 end
+               end
+    else false end
+  end
+
+  def get_channel(tools: nil, message_event: nil)
+    if tools and message_event
+      if tools[:args].empty?
+        message_event.message.channel
+      else
+        if !(message_event.message.mentions.empty?)
+          message_event.server.channels.filter { |chn| chn.id == message_event.message.mentions.first.id }.first
+        elsif !(message_event.server.channels.filter { |chn| chn.id == tools[:args][0].to_i }.empty?)
+          message_event.server.channels.filter { |chn| chn.id == tools[:args][0].to_i }.first
+        elsif !(message_event.channel.server.channels.filter { |chn| chn.name.match(/#{tools[:args].join(" ")}/) }.empty?)
+          message_event.server.channels.filter { |chn| chn.name.match(/#{tools[:args].join(" ")}/) }.first
+        else
+          "not_found"
+        end
+      end
+    else false end
+  end
+
   alias is_owner? is_authorized?
   alias find_command get_command
-  module_function :is_authorized?, :is_owner?, :build_embed, :get_command, :find_command, :add_fields, :display
+  module_function :is_authorized?, :is_owner?, :build_embed, :get_command, :find_command, :add_fields, :display, :get_member, :get_channel
 end
