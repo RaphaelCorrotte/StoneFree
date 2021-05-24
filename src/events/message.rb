@@ -12,13 +12,39 @@ module StoneFree
 
           begin
             matched_errors = []
-            verified = Utils::verify_command_permission(event, command.props)
+            verified_perm = {
+              :user => lambda {
+                missing = []
+                command.required_permissions.each do |usr_p|
+                  if event.author.permission?(usr_p)
+                    next
+                  else
+                    missing << usr_p
+                  end
+                  missing
+                end
+              },
+              :client => lambda {
+                missing = []
+                command.required_bot_permissions.each do |bot_p|
+                  if event.server.bot.permission?(bot_p)
+                    next
+                  else
+                    missing << bot_p
+                  end
+                end
+                missing
+              }
+            }
 
-            unless verified[:user].empty?
+            verified_perm_user = verified_perm[:user].call
+            verified_perm_bot = verified_perm[:client].call
+
+            unless verified_perm_user.empty?
               matched_errors << :user_permissions
             end
 
-            unless verified[:client].empty?
+            unless verified_perm_bot.empty?
               matched_errors << :client_permissions
             end
 
@@ -26,8 +52,8 @@ module StoneFree
               command.run.call(event, { :args => args })
             else
               matchs = {
-                :client_permissions => "• Il me manque l#{verified[:client].size > 1 ? "es" : "a"} permission#{verified[:client].size > 1 ? "es" : "a"} suivante#{verified[:client].size > 1 ? "s" : ""} : #{verified[:client].map { |perm| Utils::display(perm.to_s) }.join(", ")}",
-                :user_permissions => "• Il vous manque l#{verified[:user].size > 1 ? "es" : "a"} permission#{verified[:user].size > 1 ? "es" : "a"} suivante#{verified[:user].size > 1 ? "s" : ""} : #{verified[:user].map { |perm| Utils::display(perm.to_s) }.join(", ")}"
+                :client_permissions => "• Il me manque l#{verified_perm_bot.size > 1 ? "es" : "a"} permission#{verified_perm_bot.size > 1 ? "es" : "a"} suivante#{verified_perm_bot.size > 1 ? "s" : ""} : #{verified_perm_bot.map { |perm| Utils::display(perm.to_s) }.join(", ")}",
+                :user_permissions => "• Il vous manque l#{verified_perm_user.size > 1 ? "es" : "a"} permission#{verified_perm_user.size > 1 ? "es" : "a"} suivante#{verified_perm_user.size > 1 ? "s" : ""} : #{verified_perm_user.map { |perm| Utils::display(perm.to_s) }.join(", ")}"
               }
               event.channel.send_embed do |embed|
                 embed.description = [
