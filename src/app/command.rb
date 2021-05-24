@@ -24,7 +24,7 @@ module StoneFree
     # Load command's attributes
     # @return [Object] the attributes
     private def load_attributes
-      Command.attr_accessor :name, :aliases, :description, :args, :use_example, :required_permissions, :required_bot_permissions, :category
+      Command.attr_accessor :name, :aliases, :description, :args, :use_example, :required_permissions, :required_bot_permissions, :category, :owner_only
       if @props[:name] then @name = @props[:name] end
 
       @props[:aliases] ||= :default
@@ -82,6 +82,17 @@ module StoneFree
           end
         end
       end
+
+      if props[:owner_only]
+        @owner_only = true
+      else
+        @owner_only = false
+      end
+
+      if @category.upcase.match(/OWNER|TEST/)
+        @owner_only = true
+      end
+
       Hash[
         :name => @name,
         :aliases => @aliases,
@@ -90,7 +101,8 @@ module StoneFree
         :required_permissions => @required_permissions,
         :required_bot_permissions => @required_bot_permissions,
         :use_example => @use_example,
-        :category => @category
+        :category => @category,
+        :owner_only => @owner_only
       ]
     end
   end
