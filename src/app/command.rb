@@ -43,11 +43,10 @@ module StoneFree
 
       if @props[:required_permissions] == :default
         @required_permissions = []
-      else
-        if @props[:required_permissions].respond_to?(:to_a)
+      elsif @props[:required_permissions].respond_to?(:to_a)
           @required_permissions = @props[:required_permissions].to_a
-        else @required_permissions = []
-        end
+      else
+        @required_permissions = []
       end
 
       @required_bot_permissions ||= []
