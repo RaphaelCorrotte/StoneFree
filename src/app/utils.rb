@@ -101,7 +101,38 @@ module StoneFree::Utils
     else false end
   end
 
+  def for_permission(member, channel, permission)
+    member.permission?(permission, channel)
+  end
+
+  def verify_command_permission(message_event, command_props)
+    user_missing_permissions = []
+    client_missing_permissions = []
+
+    if command_props[:required_permissions]
+      command_props[:required_permissions].each do |permission|
+        unless for_permission(message_event.author, message_event.channel, permission)
+          user_missing_permissions << permission
+        end
+      end
+    end
+
+    if command_props[:required_bot_permissions]
+      command_props[:required_bot_permissions].each do |permission|
+        bot_member = get_member(tools: { :args => $client.bot_application.id.to_s.split(" ") }, message_event: message_event)
+        unless for_permission(bot_member, message_event.channel, permission)
+          client_missing_permissions << permission
+        end
+      end
+    end
+
+    {
+      :user => user_missing_permissions,
+      :client => client_missing_permissions
+    }
+  end
+
   alias is_owner? is_authorized?
   alias find_command get_command
-  module_function :is_authorized?, :is_owner?, :build_embed, :get_command, :find_command, :add_fields, :display, :get_member, :get_channel
+  module_function :is_authorized?, :is_owner?, :build_embed, :get_command, :find_command, :add_fields, :display, :get_member, :get_channel, :for_permission, :verify_command_permission
 end
