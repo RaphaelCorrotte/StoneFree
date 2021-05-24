@@ -54,7 +54,7 @@ module StoneFree::Utils
   # @param text [StringIO] The text to display
   # @return [StringIO] the displayed text
   def display(text)
-    text.split
+    text.split(/\s+|_+/)
     .map do |word|
       if word.size <= 2
         word.upcase
@@ -101,10 +101,20 @@ module StoneFree::Utils
     else false end
   end
 
-  def for_permission(member, channel, permission)
-    member.permission?(permission, channel)
-  end
+  alias is_owner? is_authorized?
+  alias find_command get_command
+  module_function :is_authorized?,
+                  :is_owner?,
+                  :build_embed,
+                  :get_command,
+                  :find_command,
+                  :add_fields,
+                  :display,
+                  :get_member,
+                  :get_channel
+end
 
+=begin
   def verify_command_permission(message_event, command_props)
     user_missing_permissions = []
     client_missing_permissions = []
@@ -131,8 +141,4 @@ module StoneFree::Utils
       :client => client_missing_permissions
     }
   end
-
-  alias is_owner? is_authorized?
-  alias find_command get_command
-  module_function :is_authorized?, :is_owner?, :build_embed, :get_command, :find_command, :add_fields, :display, :get_member, :get_channel, :for_permission, :verify_command_permission
-end
+=end
