@@ -63,11 +63,11 @@ module StoneFree
             },
             {
               :name => "• Permissions utilisateur requises",
-              :value => command_required_permissions || "aucune"
+              :value => Utils::display(command_required_permissions) || "aucune"
             },
             {
               :name => "• Permissions bot requises",
-              :value => command_required_bot_permissions || "aucune"
+              :value => Utils::display(command_required_bot_permissions) || "aucune"
             }
           ]
           event.channel.send_embed do |embed|
@@ -88,7 +88,7 @@ module StoneFree
             fields << {
               :name => "• #{Utils::display(category.to_s)}",
               :value => $client.commands.filter { |cmd| cmd.category == category }.map { |cmd| cmd.name }.join(", ")
-            } unless category == "TESTS" or category == "OWNER"
+            } unless command.owner_only
           end
 
           event.channel.send_embed do |embed|

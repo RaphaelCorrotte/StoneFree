@@ -21,8 +21,8 @@ module StoneFree
                   else
                     missing << usr_p
                   end
-                  missing
                 end
+                missing
               },
               :client => lambda {
                 missing = []
@@ -40,6 +40,8 @@ module StoneFree
             verified_perm_user = verified_perm[:user].call
             verified_perm_bot = verified_perm[:client].call
 
+            p verified_perm_user
+
             unless verified_perm_user.empty?
               matched_errors << :user_permissions
             end
@@ -48,12 +50,22 @@ module StoneFree
               matched_errors << :client_permissions
             end
 
+            if command.owner_only and !(Utils::is_authorized?(event.author.id))
+              matched_errors << :owner
+            end
+
+            if command.args and args.empty? and command.strict_args
+              matched_errors << :args
+            end
+
             if matched_errors.empty?
               command.run.call(event, { :args => args })
             else
               matchs = {
                 :client_permissions => "• Il me manque l#{verified_perm_bot.size > 1 ? "es" : "a"} permission#{verified_perm_bot.size > 1 ? "es" : "a"} suivante#{verified_perm_bot.size > 1 ? "s" : ""} : #{verified_perm_bot.map { |perm| Utils::display(perm.to_s) }.join(", ")}",
-                :user_permissions => "• Il vous manque l#{verified_perm_user.size > 1 ? "es" : "a"} permission#{verified_perm_user.size > 1 ? "es" : "a"} suivante#{verified_perm_user.size > 1 ? "s" : ""} : #{verified_perm_user.map { |perm| Utils::display(perm.to_s) }.join(", ")}"
+                :user_permissions => "• Il vous manque l#{verified_perm_user.size > 1 ? "es" : "a"} permission#{verified_perm_user.size > 1 ? "es" : "a"} suivante#{verified_perm_user.size > 1 ? "s" : ""} : #{verified_perm_user.map { |perm| Utils::display(perm.to_s) }.join(", ")}",
+                :owner => "• Vous devez être un propriétaire du bot pour exécuter cette commande.",
+                :args => "• Vous devez préciser des arguments (#{command.args[0]})."
               }
               event.channel.send_embed do |embed|
                 embed.description = [

@@ -13,6 +13,7 @@ module StoneFree
                              :args => ["[utilisateur]"]
                            }) do |event, tools|
 
+        p tools
         target = Utils::get_member(message_event: event, tools: tools)
 
         if target == "not_found" || target == nil ||!target
@@ -41,7 +42,7 @@ module StoneFree
           Utils::add_fields(embed, [
             {
               :name => "• Identifiant",
-              :value => target.id.to_s
+              :value => target.id
             },
             {
               :name => "• Surnom",

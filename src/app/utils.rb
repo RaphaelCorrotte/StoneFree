@@ -65,7 +65,7 @@ module StoneFree::Utils
         .join(" ")
   end
 
-  def get_member(tools: nil, message_event: nil)
+  def get_member(tools:, message_event:)
     if tools and message_event
       if tools[:args].empty?
             message_event.author
@@ -77,13 +77,13 @@ module StoneFree::Utils
                  elsif !(message_event.channel.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.empty?)
                    message_event.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.first
                  else
-                   "not_found"
+                   :not_found
                  end
                end
     else false end
   end
 
-  def get_channel(tools: nil, message_event: nil)
+  def get_channel(tools:, message_event:)
     if tools and message_event
       if tools[:args].empty?
         message_event.message.channel

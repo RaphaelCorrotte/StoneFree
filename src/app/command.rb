@@ -24,7 +24,7 @@ module StoneFree
     # Load command's attributes
     # @return [Object] the attributes
     private def load_attributes
-      Command.attr_accessor :name, :aliases, :description, :args, :use_example, :required_permissions, :required_bot_permissions, :category, :owner_only
+      Command.attr_accessor :name, :aliases, :description, :args, :strict_args, :use_example, :required_permissions, :required_bot_permissions, :category, :owner_only
       if @props[:name] then @name = @props[:name] end
 
       @props[:aliases] ||= :default
@@ -39,12 +39,15 @@ module StoneFree
       end
       if @props[:description] then @description = @props[:description].to_s end
       if @props[:args] then @args = @props[:args].to_a end
+      if @props[:strict_args] then @strict_args = true end
       if @props[:use_example] then @use_example = @props[:use_example] end
 
       if @props[:required_permissions] == :default
         @required_permissions = []
       elsif @props[:required_permissions].respond_to?(:to_a)
           @required_permissions = @props[:required_permissions].to_a
+      elsif @props[:required_permissions].class == Symbol
+        @required_permissions = [props[:required_permissions]]
       else
         @required_permissions = []
       end
@@ -82,7 +85,7 @@ module StoneFree
         end
       end
 
-      if props[:owner_only]
+      if @props[:owner_only]
         @owner_only = true
       else
         @owner_only = false
@@ -97,6 +100,7 @@ module StoneFree
         :aliases => @aliases,
         :description => @description,
         :args => @args,
+        :strict_args => @strict_args,
         :required_permissions => @required_permissions,
         :required_bot_permissions => @required_bot_permissions,
         :use_example => @use_example,
