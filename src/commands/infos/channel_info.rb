@@ -13,7 +13,7 @@ module StoneFree
                                :args => ["[salon]"]
                              }) do |event, tools|
 
-        target = Utils::get_channel(message_event: event, args: tools)
+        target = Utils::get_channel(message_event: event, tools: tools)
 
         if target == :not_found || target == nil ||!target
           event.respond "Le salon n'a pas été trouvé. Veuillez réessayer."
