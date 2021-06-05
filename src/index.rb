@@ -1,12 +1,12 @@
+# frozen_string_literal: true
+
 require_relative "app/app"
 
 cmds = StoneFree::CommandHandler.load_commands
 $client.commands = []
 
 cmds.each do |cmd|
-  if StoneFree::Commands.respond_to?(cmd)
-    $client.commands << StoneFree::Commands.method(cmd).call
-  end
+  $client.commands << StoneFree::Commands.method(cmd).call if StoneFree::Commands.respond_to?(cmd)
 end
 
 events = StoneFree::EventHandler.load_events

@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 require "discordrb"
+require "sqlite3"
 require "json"
 require "yaml"
 require_relative "bot"
@@ -19,5 +22,10 @@ module StoneFree
   FILE_LOGGER = Logger.new(:file)
 end
 
-$stone_free = StoneFree::Client.new(YAML.load(File.read("src/private/config.yml"))[:token])
+$stone_free = StoneFree::Client.new(YAML.load_file("src/private/config.yml")[:token])
 $client = $stone_free.client
+$db = {}
+
+$db[:tests] = SQLite3::Database.new("src/database/test.db")
+$db[:warns] = SQLite3::Database.new("src/database/warns.db")
+$db[:warns].results_as_hash = true

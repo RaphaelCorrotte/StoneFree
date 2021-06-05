@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "app"
 
 module StoneFree
@@ -5,8 +7,8 @@ module StoneFree
   # @!attribute client [Discordrb::Bot] The client
   # @!attribute data [Object] the bot config
   class Client
-    attr_reader :client
-    attr_reader :data
+    attr_reader :client, :data
+
     # Create the Client
     # @param token [StringIO] the client's token
     # Load the client's attributes
@@ -14,12 +16,13 @@ module StoneFree
       # Add the commands and config attributes to the discordrb bot
       Discordrb::Bot.attr_accessor :commands, :config
       @client = Discordrb::Bot.new(:token => token, :ignore_bots => true)
-      @data = YAML.load(File.read("src/private/config.yml"))
+      @data = YAML.load_file("src/private/config.yml")
       @client.config = @data
       Thread.new do
         puts "Type '.exit' to exit"
         loop do
-          next unless STDIN.gets.chomp == ".exit"
+          next unless $stdin.gets.chomp == ".exit"
+
           exit
         end
       end

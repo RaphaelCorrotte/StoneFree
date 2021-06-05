@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module StoneFree
   # Interpret a command
   class Command
@@ -13,7 +15,8 @@ module StoneFree
     # @yieldparam event, tools The event and the tools to run the command
     # @return [Object] a hash with the props (as 'load_attributes') and the method
     def initialize(props, &run)
-      @props, @run = props, run
+      @props = props
+      @run = run
       @props = load_attributes
       {
         :props => load_attributes,
@@ -25,36 +28,36 @@ module StoneFree
     # @return [Object] the attributes
     private def load_attributes
       Command.attr_accessor :name, :aliases, :description, :args, :strict_args, :use_example, :required_permissions, :required_bot_permissions, :category, :owner_only
-      if @props[:name] then @name = @props[:name] end
+      @name = @props[:name] if @props[:name]
 
       @props[:aliases] ||= :default
       if @props[:aliases]
-        if @props[:aliases].class == Array or @props[:aliases].class == String
-          @aliases = @props[:aliases]
-        elsif @aliases == :default
-          @aliases = []
-        else
-          @aliases = []
-        end
+        @aliases = if @props[:aliases].instance_of?(Array) || @props[:aliases].instance_of?(String)
+                     @props[:aliases]
+                   elsif @aliases == :default
+                     []
+                   else
+                     []
+                   end
       end
-      if @props[:description] then @description = @props[:description].to_s end
-      if @props[:args] then @args = @props[:args].to_a end
-      if @props[:strict_args] then @strict_args = true end
-      if @props[:use_example] then @use_example = @props[:use_example] end
+      @description = @props[:description].to_s if @props[:description]
+      @args = @props[:args].to_a if @props[:args]
+      @strict_args = true if @props[:strict_args]
+      @use_example = @props[:use_example] if @props[:use_example]
 
-      if @props[:required_permissions] == :default
-        @required_permissions = []
-      elsif @props[:required_permissions].respond_to?(:to_a)
-          @required_permissions = @props[:required_permissions].to_a
-      elsif @props[:required_permissions].class == Symbol
-        @required_permissions = [props[:required_permissions]]
-      else
-        @required_permissions = []
-      end
+      @required_permissions = if @props[:required_permissions] == :default
+                                []
+                              elsif @props[:required_permissions].respond_to?(:to_a)
+                                @props[:required_permissions].to_a
+                              elsif @props[:required_permissions].instance_of?(Symbol)
+                                [props[:required_permissions]]
+                              else
+                                []
+                              end
 
       @required_bot_permissions ||= []
-      @props[:required_bot_permissions] = [] unless @props[:required_bot_permissions].class == Array
-      if @props[:required_bot_permissions] == :default or !@props[:required_bot_permissions] or @props[:required_bot_permissions].empty?
+      @props[:required_bot_permissions] = [] unless @props[:required_bot_permissions].instance_of?(Array)
+      if (@props[:required_bot_permissions] == :default) || !@props[:required_bot_permissions] || @props[:required_bot_permissions].empty?
 
         @required_bot_permissions.push(
           :add_reactions,
@@ -64,20 +67,21 @@ module StoneFree
           :use_external_emoji
         )
       else
-        if @props[:required_bot_permissions].respond_to?(:to_a)
-          @required_bot_permissions = @props[:required_bot_permissions].to_a
-        else @required_bot_permissions = []
-        end
+        @required_bot_permissions = if @props[:required_bot_permissions].respond_to?(:to_a)
+                                      @props[:required_bot_permissions].to_a
+                                    else []
+                                    end
       end
 
-      if @props[:category] then @category = @props[:category] else @category = :default end
+      @category = @props[:category] || :default
 
-      if @use_example == :default then @use_example = "#{$client.config[:prefix]}#{@name}" end
-      if @required_permissions == :default then @required_permissions = [] end
+      @use_example = "#{$client.config[:prefix]}#{@name}" if @use_example == :default
+      @required_permissions = [] if @required_permissions == :default
 
-      if @category == :default or !@category
+      if (@category == :default) || !@category
         Dir.entries("src/commands/").each do |dir|
-          next if dir == "." || dir == ".."
+          next if %w[. ..].include?(dir)
+
           if Dir.entries("src/commands/#{dir}").include?("#{@name}.rb")
             @category = dir.upcase
             break
@@ -85,15 +89,13 @@ module StoneFree
         end
       end
 
-      if @props[:owner_only]
-        @owner_only = true
-      else
-        @owner_only = false
-      end
+      @owner_only = if @props[:owner_only]
+                      true
+                    else
+                      false
+                    end
 
-      if @category.upcase.match(/OWNER|TEST/)
-        @owner_only = true
-      end
+      @owner_only = true if @category.upcase.match(/OWNER|TEST/)
 
       Hash[
         :name => @name,

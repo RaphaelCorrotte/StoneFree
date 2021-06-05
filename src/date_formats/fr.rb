@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module StoneFree::Locales
   def fr
     days = "lundi!mardi!mercredi!jeudi!vendredi!samedi!dimanche".split("!")
@@ -32,7 +34,7 @@ module StoneFree::Locales
       :months => months,
       :short_months => short_months,
       :formats => formats,
-      :ordinal => ->(n) do
+      :ordinal => lambda do |n|
         n == 1 ? "#{n}er" : n
       end,
       :relative_time => relative_time

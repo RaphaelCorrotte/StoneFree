@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 require_relative "../../app/app"
 
@@ -6,7 +7,7 @@ module StoneFree
     def purge
       StoneFree::Command.new({
                                :name => :purge,
-                               :aliases => %|clear|,
+                               :aliases => %(clear),
                                :description => "Supprime de messages du salon",
                                :use_example => "56",
                                :required_permissions => :manage_messages,
@@ -16,10 +17,9 @@ module StoneFree
                              }) do |event, tools|
         to_purge = []
         count = tools[:args][0].to_i
-        deleted = 0
         responce = []
 
-        if count < 250
+        if count <= 250
           if count >= 100
             a, b = count.divmod(99)
             a.times do
@@ -35,20 +35,16 @@ module StoneFree
           event.respond "Vous essayez de supprimer trop de messages (limite: 250)."
         end
 
-        begin
-          to_purge.each do |purge|
-            event.channel.prune(purge)
-          end
-          rescue
+        to_purge.each do |purge|
+          event.channel.prune(purge)
         end
 
-        responce << "Les #{count.to_s} messages ont été supprimés."
-
+        responce << "Les #{count} messages ont été supprimés."
 
         event.respond responce.join("\n")
       end
     end
-    alias :clear :purge
+    alias clear purge
     module_function :purge, :clear
   end
 end

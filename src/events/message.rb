@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../app/app"
 
 module StoneFree
@@ -6,9 +8,10 @@ module StoneFree
       $client.message(start_with: $client.config[:prefix]) do |event|
         args = event.content.slice($client.config[:prefix].size, event.content.size).split(" ")
         next unless event.content.start_with?($client.config[:prefix])
+
         name = args.shift
-        if StoneFree::Utils::get_command(name, { :boolean => true })
-          command = StoneFree::Utils::get_command(name)
+        if StoneFree::Utils.get_command(name, { :boolean => true })
+          command = StoneFree::Utils.get_command(name)
 
           begin
             matched_errors = []
@@ -40,30 +43,20 @@ module StoneFree
             verified_perm_user = verified_perm[:user].call
             verified_perm_bot = verified_perm[:client].call
 
-            p verified_perm_user
+            matched_errors << :user_permissions unless verified_perm_user.empty?
 
-            unless verified_perm_user.empty?
-              matched_errors << :user_permissions
-            end
+            matched_errors << :client_permissions unless verified_perm_bot.empty?
 
-            unless verified_perm_bot.empty?
-              matched_errors << :client_permissions
-            end
+            matched_errors << :owner if command.owner_only && !Utils.is_authorized?(event.author.id)
 
-            if command.owner_only and !(Utils::is_authorized?(event.author.id))
-              matched_errors << :owner
-            end
-
-            if command.args and args.empty? and command.strict_args
-              matched_errors << :args
-            end
+            matched_errors << :args if command.args && args.empty? && command.strict_args
 
             if matched_errors.empty?
               command.run.call(event, { :args => args })
             else
               matchs = {
-                :client_permissions => "• Il me manque l#{verified_perm_bot.size > 1 ? "es" : "a"} permission#{verified_perm_bot.size > 1 ? "es" : "a"} suivante#{verified_perm_bot.size > 1 ? "s" : ""} : #{verified_perm_bot.map { |perm| Utils::display(perm.to_s) }.join(", ")}",
-                :user_permissions => "• Il vous manque l#{verified_perm_user.size > 1 ? "es" : "a"} permission#{verified_perm_user.size > 1 ? "es" : "a"} suivante#{verified_perm_user.size > 1 ? "s" : ""} : #{verified_perm_user.map { |perm| Utils::display(perm.to_s) }.join(", ")}",
+                :client_permissions => "• Il me manque l#{verified_perm_bot.size > 1 ? 'es' : 'a'} permission#{verified_perm_bot.size > 1 ? 'es' : 'a'} suivante#{verified_perm_bot.size > 1 ? 's' : ''} : #{verified_perm_bot.map { |perm| Utils.display(perm.to_s) }.join(', ')}",
+                :user_permissions => "• Il vous manque l#{verified_perm_user.size > 1 ? 'es' : 'a'} permission#{verified_perm_user.size > 1 ? 'es' : 'a'} suivante#{verified_perm_user.size > 1 ? 's' : ''} : #{verified_perm_user.map { |perm| Utils.display(perm.to_s) }.join(', ')}",
                 :owner => "• Vous devez être un propriétaire du bot pour exécuter cette commande.",
                 :args => "• Vous devez préciser des arguments (#{command.args[0]})."
               }
@@ -74,11 +67,14 @@ module StoneFree
                 ].join("\n")
               end
             end
-          rescue => e
-            CONSOLE_LOGGER.error("Error running #{command.name}: #{e.message}")
+          rescue SQLite3::BusyException
+            CONSOLE_LOGGER.warn("The SQLite database is locked")
+            event.respond "La base de donnée du bot est actuellement bloquée. Veuillez réessayer plus tard."
+          rescue StandardError => e
+            CONSOLE_LOGGER.error("Error running #{command.name}: #{e.full_message}")
             FILE_LOGGER.write(e.message, :errors)
           else
-              CONSOLE_LOGGER.info("Command #{command.name} executed")
+            CONSOLE_LOGGER.info("Command #{command.name} executed")
           end
         end
       end

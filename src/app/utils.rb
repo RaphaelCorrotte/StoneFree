@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "app"
 
 module StoneFree::Utils
@@ -29,7 +31,7 @@ module StoneFree::Utils
   def add_fields(e = Discordrb::Webhooks::Embed.new, fields, inline)
     if fields.respond_to?(:each)
       fields.each do |field|
-        e.add_field(name: field[:name].to_s, value: field[:value].to_s, inline: (!!inline) )
+        e.add_field(name: field[:name].to_s, value: field[:value].to_s, inline: !inline.nil?)
         e
       end
     else false end
@@ -43,10 +45,8 @@ module StoneFree::Utils
     if props[:boolean]
       return true if StoneFree::Commands.respond_to?(command_name)
       return false unless StoneFree::Commands.respond_to?(command_name)
-    else
-      if StoneFree::Commands.respond_to?(command_name)
-        StoneFree::Commands.method(command_name).call
-      end
+    elsif StoneFree::Commands.respond_to?(command_name)
+      StoneFree::Commands.method(command_name).call
     end
   end
 
@@ -55,7 +55,7 @@ module StoneFree::Utils
   # @return [StringIO] the displayed text
   def display(text)
     text.split(/\s+|_+/)
-    .map do |word|
+        .map do |word|
       if word.size <= 2
         word.upcase
       else
@@ -65,38 +65,34 @@ module StoneFree::Utils
         .join(" ")
   end
 
-  def get_member(tools:, message_event:)
-    if tools and message_event
-      if tools[:args].empty?
-            message_event.author
-               else
-                 if !(message_event.message.mentions.empty?)
-                   message_event.server.users.filter { |usr| usr.id == message_event.message.mentions.first.id }.first
-                 elsif !(message_event.server.members.filter { |usr| usr.id == tools[:args][0].to_i }.empty?)
-                   message_event.server.members.filter { |usr| usr.id == tools[:args][0].to_i }.first
-                 elsif !(message_event.channel.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.empty?)
-                   message_event.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.first
-                 else
-                   :not_found
-                 end
-               end
+  def get_member(tools:, message_event:, setting: { :include_author => true })
+    if tools && message_event
+      if tools[:args].empty? && setting[:include_author]
+        message_event.author
+      elsif !message_event.message.mentions.empty?
+        message_event.server.users.filter { |usr| usr.id == message_event.message.mentions.first.id }.first
+      elsif !message_event.server.members.filter { |usr| usr.id == tools[:args][0].to_i }.empty?
+        message_event.server.members.filter { |usr| usr.id == tools[:args][0].to_i }.first
+      elsif !message_event.channel.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.empty?
+        message_event.server.members.filter { |usr| usr.username.match(/#{tools[:args].join(" ")}/) }.first
+      else
+        :not_found
+      end
     else false end
   end
 
   def get_channel(tools:, message_event:)
-    if tools and message_event
+    if tools && message_event
       if tools[:args].empty?
         message_event.message.channel
+      elsif !message_event.message.mentions.empty?
+        message_event.server.channels.filter { |chn| chn.id == message_event.message.mentions.first.id }.first
+      elsif !message_event.server.channels.filter { |chn| chn.id == tools[:args][0].to_i }.empty?
+        message_event.server.channels.filter { |chn| chn.id == tools[:args][0].to_i }.first
+      elsif !message_event.channel.server.channels.filter { |chn| chn.name.match(/#{tools[:args].join(" ")}/) }.empty?
+        message_event.server.channels.filter { |chn| chn.name.match(/#{tools[:args].join(" ")}/) }.first
       else
-        if !(message_event.message.mentions.empty?)
-          message_event.server.channels.filter { |chn| chn.id == message_event.message.mentions.first.id }.first
-        elsif !(message_event.server.channels.filter { |chn| chn.id == tools[:args][0].to_i }.empty?)
-          message_event.server.channels.filter { |chn| chn.id == tools[:args][0].to_i }.first
-        elsif !(message_event.channel.server.channels.filter { |chn| chn.name.match(/#{tools[:args].join(" ")}/) }.empty?)
-          message_event.server.channels.filter { |chn| chn.name.match(/#{tools[:args].join(" ")}/) }.first
-        else
-          "not_found"
-        end
+        "not_found"
       end
     else false end
   end
@@ -114,31 +110,29 @@ module StoneFree::Utils
                   :get_channel
 end
 
-=begin
-  def verify_command_permission(message_event, command_props)
-    user_missing_permissions = []
-    client_missing_permissions = []
-
-    if command_props[:required_permissions]
-      command_props[:required_permissions].each do |permission|
-        unless for_permission(message_event.author, message_event.channel, permission)
-          user_missing_permissions << permission
-        end
-      end
-    end
-
-    if command_props[:required_bot_permissions]
-      command_props[:required_bot_permissions].each do |permission|
-        bot_member = get_member(tools: { :args => $client.bot_application.id.to_s.split(" ") }, message_event: message_event)
-        unless for_permission(bot_member, message_event.channel, permission)
-          client_missing_permissions << permission
-        end
-      end
-    end
-
-    {
-      :user => user_missing_permissions,
-      :client => client_missing_permissions
-    }
-  end
-=end
+#   def verify_command_permission(message_event, command_props)
+#     user_missing_permissions = []
+#     client_missing_permissions = []
+#
+#     if command_props[:required_permissions]
+#       command_props[:required_permissions].each do |permission|
+#         unless for_permission(message_event.author, message_event.channel, permission)
+#           user_missing_permissions << permission
+#         end
+#       end
+#     end
+#
+#     if command_props[:required_bot_permissions]
+#       command_props[:required_bot_permissions].each do |permission|
+#         bot_member = get_member(tools: { :args => $client.bot_application.id.to_s.split(" ") }, message_event: message_event)
+#         unless for_permission(bot_member, message_event.channel, permission)
+#           client_missing_permissions << permission
+#         end
+#       end
+#     end
+#
+#     {
+#       :user => user_missing_permissions,
+#       :client => client_missing_permissions
+#     }
+#   end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../../app/app"
 
 module StoneFree
@@ -5,7 +7,7 @@ module StoneFree
     def kick
       StoneFree::Command.new({
                                :name => :kick,
-                               :aliases => %|b|,
+                               :aliases => %(b),
                                :description => "Expulser un membre du serveur",
                                :use_example => "Senchu ",
                                :required_permissions => :kick_members,
@@ -13,11 +15,10 @@ module StoneFree
                                :args => ["<membre> [raison]"],
                                :strict_args => true
                              }) do |event, tools|
-
-        target = Utils::get_member(tools: { :args => [tools[:args][0]] }, message_event: event)
+        target = Utils.get_member(tools: { :args => [tools[:args][0]] }, message_event: event)
         reason = tools[:args][1, tools[:args].size]
 
-        if target == :not_found || target == nil ||!target
+        if target == :not_found || target.nil? || !target
           event.respond "L'utilisateur n'a pas été trouvé. Veuillez réessayer."
           next
         end
@@ -25,16 +26,13 @@ module StoneFree
         begin
           event.server.kick(target, reason: reason.join(" ") || nil)
           event.respond("L'utilisateur #{target.username}##{target.discriminator} (#{target.id}) a été expulsé du serveur.")
-        rescue => e
+        rescue StandardError => e
           p e.message
           event.respond("Il m'est impossible d'expulser et utilisateur.")
         end
-
       end
     end
-    alias :k :kick
+    alias k kick
     module_function :kick, :k
   end
 end
-
-
