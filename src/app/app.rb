@@ -13,7 +13,6 @@ require_relative "command"
 require_relative "utils"
 require_relative "date"
 
-# GameBox is the module discord bot
 module StoneFree
   include Discordrb
   include JSON
